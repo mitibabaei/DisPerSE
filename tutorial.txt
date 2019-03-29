@@ -1,0 +1,34 @@
+step by step : 
+
+1. use feather image of an extended molecular emission : 
+            ***choose an specific range of channels with the most emissions and save the slice by "imsubimage" task in casa 
+            ***save the image format in fits format ("exportfits" in CASA)
+          
+
+2. create a mask image : 
+            *** produce moment zero image , 
+            *** make fits file , 
+            *** plot fits file as .png image or from ds9 export as a png
+                note: it should working with fits image as well 
+
+3.  run disperse via following commad : 
+        >>> mse molecule_subimage.fits -mask mask.png -interactive -upSkl
+            
+            actuall error and how to solve them 
+            ***  ERROR: could not open binary for 'pdview' (-interactive).
+                        Try specifying the location: '-interactive <full/path/to/pdview>'
+                Solution:  ??? (wanna ask SU)
+                
+            ***  ERROR in setMask: mask and data do not have the same size.
+                 
+                 Solution : this is because of the dimention of your data, if you use the normmal fits file which have 4 dim and 
+                 the .png image with 2 dim as the masked image then you will get this error. 
+                 To avoid this problem, use the moment zero as actual fits file and .png file as the mask image. 
+                 rewrite the correct command in the following : 
+                 
+        >>> H13COp_subimage_moment0.fits_c0.124.up.NDskl.BRK.S006.TRIM.ASMB.vtp
+        
+            The GUI opens after this
+                 
+                 
+                 
