@@ -1,34 +1,139 @@
-step by step : 
+step by step:  
 
-1. use feather image of an extended molecular emission : 
-            ***choose an specific range of channels with the most emissions and save the slice by "imsubimage" task in casa 
-            ***save the image format in fits format ("exportfits" in CASA)
-          
+  
 
-2. create a mask image : 
-            *** produce moment zero image , 
-            *** make fits file , 
-            *** plot fits file as .png image or from ds9 export as a png
-                note: it should working with fits image as well 
+1. use feather image of an extended molecular emission:  
 
-3.  run disperse via following commad : 
-        >>> mse molecule_subimage.fits -mask mask.png -interactive -upSkl
-            
-            actuall error and how to solve them 
-            ***  ERROR: could not open binary for 'pdview' (-interactive).
-                        Try specifying the location: '-interactive <full/path/to/pdview>'
-                Solution:  ??? (wanna ask SU)
-                
-            ***  ERROR in setMask: mask and data do not have the same size.
-                 
-                 Solution : this is because of the dimention of your data, if you use the normmal fits file which have 4 dim and 
-                 the .png image with 2 dim as the masked image then you will get this error. 
-                 To avoid this problem, use the moment zero as actual fits file and .png file as the mask image. 
-                 rewrite the correct command in the following : 
-                 
-        >>> H13COp_subimage_moment0.fits_c0.124.up.NDskl.BRK.S006.TRIM.ASMB.vtp
-        
-            The GUI opens after this
-                 
-                 
-                 
+            ***choose an specific range of channels with the most emissions and save the slice by "imsubimage" task in casa  
+
+           *** smooth image via CASA task:” imsmooth”.  
+
+           Parameters need modify are: major, minor and pa. They are defined the new beam size. If we want the circular beam then major = minor and pa = 0 . Normally major and minor can choose 3 times more than the original beam size 
+
+           ***In this level, there are 3 different options, one can use the moment 0 or peak intensity map or either the cube of fits format.  
+
+            *** make fits file for the next level 
+
+2. create a mask image:  
+
+           *** produce moment zero image,  
+
+           *** make fits file,  
+
+           *** plot fits file as .png image or from ds9 export as a png 
+
+           note it should work with fits image as well.  
+           OR 
+
+           Use the attached script. This is counting all nan values to zero and all other values greater than zero to 1: 
+
+                      fitsfile = fits.open('figure.fits', cache=True) 
+
+                      hdu = fitsfile[0] 
+
+                      print(hdu.data.shape) 
+
+                      data = hdu.data 
+
+                      header = hdu.header 
+
+                      w = wcs.WCS(hdu.header) 
+
+                      data[data==np.nan]=0 
+
+                      data[data>-1e18]=1 
+
+                      fits.writeto('mask.fits', data, header) 
+
+
+ 
+
+3.  finally the figure and its mask are ready, and one can run disperse via following command:  
+
+                       >>> mse molecule_subimage.fits -mask mask.png -interactive -upSkl 
+
+           actual error and how to solve them  
+
+            *** ERROR: could not open binary for 'pdview' (-interactive). 
+
+           Try specifying the location: '-interactive <full/path/to/pdview>' 
+
+            Solution: ??? Frank solve it for SU 
+
+            *** ERROR in setMask: mask and data do not have the same size. 
+
+           Solution: this is because of the dimension of your data, if you use the normal fits file which have 4 dim and the .png image with 2 dim as the masked image then you will get this error. To avoid this problem, use the moment zero or peak intensity map as actual fits file and .png file as the mask image.  
+
+           ***Question: how to create the cube image of all filaments?  Ask Sumeyye 
+
+
+
+           rewrite the correct command in the following:  
+
+                       >>> mse fig_subimage_imsmooth_peak.fits -mask mask.png -interactive -upSkl 
+
+           The GUI opens after this run and you can see the image similar to (image/im_1_dens_pers_diag.png). Via this image you can check the persistence diagram as it deeply reflects the topological nature of the distribution and can be used to understand it better. For instance, the following diagram (represented by a 2D histogram of the pairs distribution, instead of the pairs themselves) was computed from a totally different map 
+
+           here you should to select lg(X) and lg(Y) to get logarithmic image for a better view.  
+
+           Then (Control + left click) on the image shows the pink line which is associated to the "persistence threshold" (in image shows the number ~6.E20 (from the Y-axis)). 
+
+           Also, the green line shows that the nature of the distribution is different for background values below or above "X=~4E20" on the X-axis. you can choose the value manually by looking the momment0.fits file on ds9, select a small region, double click to open a new window, select analysis bottom and then statistics, read the noise level. choose a number roughly three times more. this defines for parameter named "-trimBelow". This feature reflects the fact that in some regions of this data-set, the signal was below the instrument detection threshold and the result is complex noise generated by the detectors.  
+
+           Select done and let the program create a file with ‘.NDskl’ format.  
+
+4. In next step, define and play with more other parameters to get a perfect and smooth image via following command:  
+
+                      >>> skelconv fig_subimage_imsmooth_peak.fits_c0.124.up.NDskl -breakdown -smooth 6 -trimBelow 0.06 -assemble 70 -toFITS 
+
+           Check the parameters meaning at  
+
+           ( http://www2.iap.fr/users/sousbie/web/html/index4f3e.html?category/Manual ) 
+
+           For instance, “-to vtp” will save the result in vtp format and you can see it in paraview. You can also save it in fits file or any other format you wish. 
+
+                  
+
+Parameters :  
+
+           mse: DisPerSE ’s main function is called mse which calculates a Morse-Smale Complex of a given dataset, and it can be directly run on a FITS 2 (Flexible Image Transport System).  
+
+           Persistence threshold: Persistence is defined as the difference of the values between two critical points that are connected with an arc (critical point pair) in order to evaluate which of these structures in the MSC are more prominent, and hence, more likely to be a real feature of the dataset. 
+
+           This can be set through two different ways:  
+
+           -interactive: DisPerSE plots a persistence diagram where all the critical point pairs are plotted, and user can decide by eye where to set the persistence threshold. The diagram shows a 2D histogram of the critical point pair distribution based on a column density map. The y-axis is the persistence (the difference between densities of the critical points in a pair) and the x-axis is the lowest density value of a pair. The pink dash-dot line marks the persistence threshold set by the user by eye. It can be seen that this threshold is set at a level above which the points stand out from the bulk of the distribution. These points above the threshold represent high persistence pairs; or in other way structures that are more prominent compared to the rest. In order to set the threshold the user can use Ctrl+left click, adjust it up and down by holding the Ctrl key and dragging the line around. When the threshold is at the desired position it can be applied to the MSC, that is already calculated prior to this point, by clicking Done on the diagram window. Another way to set persistence is without using the diagram. 
+
+           > mse fitsFile.fits -interactive -upSkl -periodicity 0 
+
+           -cut:  Unlike -interactive, -cut option is followed by a number, that is the absolute value of the desired threshold. The user can already decide this without seeing the persistence diagram, simple by setting the threshold as a factor of the noise rms in the data. Therefore, a simple first step to running DisPerSE from the command line is as following: 
+
+           > mse fitsFile.fits -cut 6.2e+20 -upSkl -periodicity 0 
+
+
+
+           -upSkl: option is set to identify filaments that connect maxima to saddle points. 
+
+
+
+           -downSkl  Anti-filaments, or void filaments, can be identified by using the option -downSkl . 
+
+
+
+           -periodicity By default DisPerSE assumes periodic boundaries for the dataset. This is disabled by 
+
+           setting -periodicity to 0. 
+
+
+
+           Skelconv The skelconv command allows us to make further adjustments on the skeleton (e.g. smooth, 
+
+           assemble, etc) and write it as a FITS, ASCII or vtp file. 
+
+ 
+
+ 
+
+In next step, one need to extract all filaments. To do this run the attached script for it.  be careful that you need to modify the input file and number of filaments and desired location to saving the txt file of all filaments.  
+
+In last step you can plot all filaments on your image.  
