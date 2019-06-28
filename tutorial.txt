@@ -63,9 +63,12 @@ step by step:
             *** ERROR in setMask: mask and data do not have the same size. 
 
            Solution: this is because of the dimension of your data, if you use the normal fits file which have 4 dim and the .png image with 2 dim as the masked image then you will get this error. To avoid this problem, use the moment zero or peak intensity map as actual fits file and .png file as the mask image.  
+           
+           *** Error : core dumped
+           you need to reduce the number of channels
 
-           ***Question: how to create the cube image of all filaments?  Ask Sumeyye 
-
+           ***Question: how to create the cube image of all filaments?  use the cube fits file without mask 
+                        >>> mse fig_subimage_imsmooth_peak.fits -interactive -upSkl 
 
 
            rewrite the correct command in the following:  
@@ -126,14 +129,16 @@ Parameters :
 
 
 
-           Skelconv The skelconv command allows us to make further adjustments on the skeleton (e.g. smooth, 
-
-           assemble, etc) and write it as a FITS, ASCII or vtp file. 
-
- 
+           Skelconv The skelconv command allows us to make further adjustments on the skeleton (e.g. smooth, assemble, etc) and write it as a FITS, ASCII or vtp file. 
+           
+           
+           - assemble: Assemble  filamentary arcs into longer filaments, with the two limitation that they do not form an angle larger than <angle> (expressed in degrees) and optionally do not go below threshold <threshold> in the field <field_name>. 
+                  >>>> assemble 70
 
  
 
 In next step, one need to extract all filaments. To do this run the attached script for it.  be careful that you need to modify the input file and number of filaments and desired location to saving the txt file of all filaments.  
 
 In last step you can plot all filaments on your image.  
+
+
